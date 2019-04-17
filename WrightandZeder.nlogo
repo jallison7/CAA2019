@@ -1,4 +1,5 @@
-extensions [CSV matrix]
+extensions [CSV matrix Nw]
+
 
 
 globals
@@ -7,7 +8,7 @@ globals
  nvillages
  pop
  yearpop
- y
+ year
 ]
 
 patches-own
@@ -38,17 +39,29 @@ to setup
   ]
   set nvillages 8
   locate-villages
-  populate-villages
-  set pop csv:from-file "WZpop.csv"
-  set yearpop  matrix:from-row-list pop
+  if original-population = true
+    [
+      set pop csv:from-file "WZpop.csv"
+      set yearpop  matrix:from-row-list pop
+      set max-years 60
+    ]
 
 end
 ;=================================================================================================================================================
 to go
+set year ticks + 1
+if original-population = true
+    [
+      read-population
+    ]
 
 exchange
-adjust-population
 
+if year = max-years
+  [
+    stop
+  ]
+tick
 end
 
 
@@ -89,49 +102,6 @@ to locate-villages ; this runs from the setup procedure. It creates seeds for "v
 
 end
 
-;=================================================================================================================================================
-to populate-villages
-
-  ;this sets the village population to the values used by Wright and Zeder for Year 1 populations
-
-
-;use ask villages... set population matrix:get yearpop year-1 village-1
-
-
-;  ask villages with [village-number = 1]
-;  [
-;  set population 178
-;  ]
-;  ask villages with [village-number = 2]
-;  [
-;  set population 199
-;  ]
-;  ask villages with [village-number = 3]
-;  [
-;  set population 200
-;  ]
-;  ask villages with [village-number = 4]
-;  [
-;  set population 181
-;  ]
-;  ask villages with [village-number = 5]
-;  [
-;  set population 215
-;  ]
-;  ask villages with [village-number = 6]
-;  [
-;  set population 230
-;  ]
-;  ask villages with [village-number = 7]
-;  [
-;  set population 210
-;  ]
-;  ask villages with [village-number = 8];
-; [
-;  set population 180
-;  ]
-
-end
 ;=========================================================================================================================================================
 to exchange
 
@@ -139,8 +109,17 @@ to exchange
 
 end
 ;========================================================================================================================================================
-to adjust-population
+to read-population
 
+let i 1
+while [i <= nvillages]
+   [
+     ask villages with [village-number = i]
+       [
+         set population matrix:get yearpop (year - 1) (i - 1)
+       ]
+     set i (i + 1)
+   ]
 
 
 end
@@ -148,8 +127,8 @@ end
 GRAPHICS-WINDOW
 195
 30
-1201
-437
+803
+438
 -1
 -1
 2.0
@@ -163,7 +142,7 @@ GRAPHICS-WINDOW
 0
 1
 0
-498
+299
 0
 198
 0
@@ -173,10 +152,10 @@ ticks
 30.0
 
 SLIDER
-1285
-50
-1457
-83
+840
+30
+1012
+63
 axes-per-producer
 axes-per-producer
 0
@@ -188,10 +167,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1285
-95
-1457
-128
+840
+75
+1012
+108
 salt-per-producer
 salt-per-producer
 0
@@ -203,10 +182,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1285
-140
-1459
-173
+840
+120
+1014
+153
 feathers-per-producer
 feathers-per-producer
 0
@@ -218,10 +197,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1285
-185
-1457
-218
+840
+165
+1012
+198
 shell-per-producer
 shell-per-producer
 0
@@ -233,10 +212,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1485
-50
-1677
-83
+1040
+30
+1232
+63
 proportion-shell-producers
 proportion-shell-producers
 0
@@ -248,10 +227,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1485
-95
-1697
-128
+1040
+75
+1252
+108
 proportion-feather-producers
 proportion-feather-producers
 0
@@ -263,10 +242,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1485
-140
-1657
-173
+1040
+120
+1212
+153
 pass-through-rate
 pass-through-rate
 0
@@ -278,10 +257,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1485
-185
-1657
-218
+1040
+165
+1212
+198
 axe-need
 axe-need
 0
@@ -293,10 +272,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1485
-230
-1657
-263
+1040
+210
+1212
+243
 salt-need
 salt-need
 0
@@ -357,6 +336,32 @@ NIL
 NIL
 NIL
 1
+
+SWITCH
+17
+233
+170
+267
+original-population
+original-population
+0
+1
+-1000
+
+SLIDER
+8
+287
+181
+321
+max-years
+max-years
+0
+1000
+60.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
