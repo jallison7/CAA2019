@@ -72,7 +72,7 @@ to locate-villages ; this runs from the setup procedure. It creates seeds for "v
     set village-spacing (max-pxcor / nvillages) ; sets distance between village seeds, measured only on the x-axis
     while [x <= nvillages]
     [
-      ask patch ((x * village-spacing) - (.5 * village-spacing)) (max-pycor / 2) ; this creates village seeds evenly spaced in a not-quite-straight line onthe display (it's a not-quite-straight line so inter-village links are easier to see)
+      ask patch ((x * village-spacing) - (.5 * village-spacing)) (max-pycor / 2) ; this creates village seeds evenly spaced in a straight line on the display
      [
        set pcolor red
        sprout-villages 1
@@ -128,7 +128,7 @@ GRAPHICS-WINDOW
 195
 30
 803
-438
+437
 -1
 -1
 2.0
@@ -341,7 +341,7 @@ SWITCH
 17
 233
 170
-267
+266
 original-population
 original-population
 0
@@ -352,7 +352,7 @@ SLIDER
 8
 287
 181
-321
+320
 max-years
 max-years
 0
