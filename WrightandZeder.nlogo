@@ -1,5 +1,20 @@
 extensions [CSV matrix Nw]
 
+; global variables set from the interface:
+; axes-per-producer (units of axes per producer per year, 5 in Wright and Zeder 1977)
+; salt-per-producer (units of salt per producer per year, 150.0 in Wright and Zeder 1977)
+; feathers-per-producer (units of feathers per producer per year, 10 in Wright and Zeder 1977)
+; shell-per-producer (units of shell per producer per year, 20 in Wright and Zeder 1977)
+; proportion-shell-producers (proportion of the Village 1 population involved in shell production, 0.15 in Wright and Zeder 1977)
+; proportion-feather-producers (proportion of the Village 8 population involved in feather production, 0.17 in Wright and Zeder 1977)
+; pass-through-rate (proportion of feather and shell passed on by each village, 0.5 in Wright and Zeder 1977)
+; axe-need-per-person (units of axes needed per person per year, 0.5 in Wright and Zeder 1977)
+; salt-need-per-person (units of salt needed per person per year, 1.6 in Wright and Zeder 1977)
+; proportion-ax-producers (proportion of the Village 1 population involved in ax production in Year 1, .09 in Wright and Zeder 1977)
+; proportion-salt-producers (proportion of the Village 8 population involved in salt production in Year 1, .10 in Wright and Zeder 1977)
+; max-years (the number of years to run the simulation, 60 in Wright and Zeder 1977)
+; orginal-population (a switch to turn on or off the use of the original population figures used by Wright and Zeder 1977. If true, the populations for each village for each year are read from WZpop.csv)
+; regulation (a switch that turns on or off the original production regulation method described by Wright and Zeder 1977 (this is not yet implemented)
 
 
 globals
@@ -9,11 +24,12 @@ globals
  pop
  yearpop
  year
-]
-
-patches-own
-[
-  village-no
+ salt-proportion
+ axe-proportion ; salt-proportion and axe-proportion are only needed to allow the variables set on the slider to vary with Wright and Zeder's regulation mechanism
+ feathers
+ shell
+ salt
+ axes
 ]
 
 breed [villages village]
@@ -23,10 +39,12 @@ villages-own
 [
 village-number
 population
-feathers
-salt
-axes
-shells
+axe-need
+salt-need
+feathers-exported
+salt-exported
+axes-exported
+shells-exported
 ]
 
 ;=================================================================================================================================================
@@ -54,7 +72,7 @@ if original-population = true
     [
       read-population
     ]
-
+produce
 exchange
 
 if year = max-years
@@ -62,6 +80,7 @@ if year = max-years
     stop
   ]
 tick
+
 end
 
 
@@ -87,15 +106,11 @@ to locate-villages ; this runs from the setup procedure. It creates seeds for "v
 
 
 
-   ask villages
-  [
-    set village-no village-number
-   ]
+
     ask patches with [pcolor = red]
     [
     ask patches in-radius 8 ; this draws circles representing villages around the village seeds created by the locate-villages procedure, and numbers the villages. This is purely for visualization purposes and affects nothing but the display.
      [
-       set village-no [village-no] of myself
        set pcolor red
      ]
     ]
@@ -103,9 +118,68 @@ to locate-villages ; this runs from the setup procedure. It creates seeds for "v
 end
 
 ;=========================================================================================================================================================
+to produce
+
+if year = 1
+  [
+    set salt-proportion proportion-salt-producers
+    set axe-proportion proportion-axe-producers  ;need to build in the regulation mechanism that varies salt-proportion and axe-proportion in subsequent years
+  ]
+set feathers (feathers-per-producer * proportion-feather-producers * (matrix:get yearpop (year - 1) 7))
+set shell (shell-per-producer * proportion-shell-producers * (matrix:get yearpop (year - 1) 0))
+set salt (salt-per-producer * salt-proportion * (matrix:get yearpop (year - 1) 7))
+set axes (axes-per-producer * axe-proportion) * (matrix:get yearpop (year - 1) 0)
+
+end
+
+;==========================================================================================================================================================
 to exchange
 
 
+let i 1
+while [i <= nvillages]
+  [
+    ask villages with [village-number = i]
+    [
+      set axe-need (population * axe-need-per-person)
+      set salt-need (population * salt-need-per-person)
+    ]
+    set i (i + 1)
+  ]
+
+ask village 0
+  [
+    set axes-exported (axes - axe-need)
+    set shells-exported (shell * pass-through-rate)
+  ]
+
+ask village 7
+  [
+    set feathers-exported (feathers * pass-through-rate)
+    set salt-exported (salt - salt-need)
+  ]
+
+set i  1
+while [i <= nvillages - 1]
+  [
+    ask village i
+      [
+        set axes-exported (([axes-exported] of village (i - 1)) - axe-need)
+        set shells-exported ([shells-exported] of village (i - 1) * pass-through-rate)
+      ]
+    set i (i + 1)
+  ]
+
+set i 6
+while [i > 0]
+  [
+    ask village i
+      [
+        set feathers-exported ([feathers-exported] of village (i + 1) * pass-through-rate)
+        set salt-exported ([salt-exported] of village (i + 1)) - salt-need
+      ]
+    set i (i - 1)
+  ]
 
 end
 ;========================================================================================================================================================
@@ -120,7 +194,6 @@ while [i <= nvillages]
        ]
      set i (i + 1)
    ]
-
 
 end
 @#$#@#$#@
@@ -261,8 +334,8 @@ SLIDER
 165
 1212
 198
-axe-need
-axe-need
+axe-need-per-person
+axe-need-per-person
 0
 1
 0.05
@@ -276,8 +349,8 @@ SLIDER
 210
 1212
 243
-salt-need
-salt-need
+salt-need-per-person
+salt-need-per-person
 0
 10
 1.6
@@ -359,6 +432,36 @@ max-years
 1000
 60.0
 1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+830
+205
+1022
+238
+proportion-salt-producers
+proportion-salt-producers
+0
+1
+0.09
+.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+830
+245
+1022
+278
+proportion-axe-producers
+proportion-axe-producers
+0
+1
+0.1
+.01
 1
 NIL
 HORIZONTAL
