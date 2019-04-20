@@ -30,6 +30,8 @@ globals
  shell
  salt
  axes
+ assess-axe ; number by which production is increased or decreased in response to shortfalls
+ assess-salt
 ]
 
 breed [villages village]
@@ -120,10 +122,32 @@ end
 ;=========================================================================================================================================================
 to produce
 
-if year = 1
+ifelse year = 1
   [
     set salt-proportion proportion-salt-producers
     set axe-proportion proportion-axe-producers  ;need to build in the regulation mechanism that varies salt-proportion and axe-proportion in subsequent years
+    set assess-axe 1
+    set assess-salt 1
+  ]
+;start else
+  [
+    if regulation = true
+      [
+        ifelse [feathers-exported] of village 1 <= 0
+          [
+          ;  set assess-axe (
+
+
+          ]
+
+          [
+          ]
+
+
+
+      ]
+
+
   ]
 set feathers (feathers-per-producer * proportion-feather-producers * (matrix:get yearpop (year - 1) 7))
 set shell (shell-per-producer * proportion-shell-producers * (matrix:get yearpop (year - 1) 0))
@@ -422,10 +446,10 @@ original-population
 -1000
 
 SLIDER
-8
-287
-181
-320
+10
+275
+183
+308
 max-years
 max-years
 0
@@ -465,6 +489,17 @@ proportion-axe-producers
 1
 NIL
 HORIZONTAL
+
+SWITCH
+42
+318
+149
+351
+regulation
+regulation
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
