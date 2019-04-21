@@ -247,6 +247,98 @@ end
 to find-population
 
 
+; initialize local variables
+let births 0
+let deaths 0
+
+let i 0
+
+ifelse year = 1  ; set initial populations to equal the first year populations used by Wright and Zeder
+  [
+   ask village 0
+     [
+       set population 178
+     ]
+   ask village 1
+     [
+       set population 199
+     ]
+   ask village 2
+     [
+       set population 200
+     ]
+  ask village 3
+     [
+       set population 181
+     ]
+  ask village 4
+     [
+       set population 215
+     ]
+  ask village 5
+     [
+       set population 230
+     ]
+  ask village 6
+     [
+       set population 210
+     ]
+   ask village 7
+     [
+       set population 180
+     ]
+  ]
+;start else
+  [ ; finds population in a normal year; need to build in wars and epidemics
+    if i < 8
+      [
+        let births (random 11) + 2 ; after the addition, this returns a random integer between 2 and 12
+        let deaths (random 11)
+        ask village i
+        [
+          set population (population + births - deaths)
+        ]
+        set i (i + 1)
+      ]
+
+  ]
+;PASCAL code
+;procedure findpop;
+
+;var
+;j,births,deaths : longint;
+;epidemicYear, warYear : array[1..villages] of longint;
+
+
+;      for j := 1 to villages do
+;        begin
+;          epidemicYear[j] := randint(5,13);
+;          warYear[j] := randint(14,55);
+;        end;
+;    end;
+;
+;  if i > 1 then
+;    begin
+;      for j := 1 to villages do
+;        begin
+;          births := randint(2,12);
+;          deaths := randint(0,10);
+;          pop[i,j] := pop[i-1,j] + births - deaths;
+;          if epidemicYear[j] = i then
+;            begin
+;              pop[i,j] := pop[i,j] - randint(10,12);
+;              epidemicYear[j] := epidemicYear[j] + randint(5,13);
+;            end;
+;          if warYear[j] = i then
+;            begin
+;              pop[i,j] := pop[i,j] - randint(15,35);
+;              warYear[j] := warYear[j] + randint(14,55);
+;            end;
+;        end;
+;
+;    end;
+;end;
+;
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
