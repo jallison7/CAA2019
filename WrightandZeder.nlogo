@@ -10,8 +10,8 @@ extensions [CSV matrix Nw]
 ; pass-through-rate (proportion of feather and shell passed on by each village, 0.5 in Wright and Zeder 1977)
 ; axe-need-per-person (units of axes needed per person per year, 0.5 in Wright and Zeder 1977)
 ; salt-need-per-person (units of salt needed per person per year, 1.6 in Wright and Zeder 1977)
-; proportion-ax-producers (proportion of the Village 1 population involved in ax production in Year 1, .09 in Wright and Zeder 1977)
-; proportion-salt-producers (proportion of the Village 8 population involved in salt production in Year 1, .10 in Wright and Zeder 1977)
+; proportion-ax-producers (proportion of the Village 1 population involved in ax production in Year 1, .091 in Wright and Zeder 1977)
+; proportion-salt-producers (proportion of the Village 8 population involved in salt production in Year 1, .097 in Wright and Zeder 1977)
 ; max-years (the number of years to run the simulation, 60 in Wright and Zeder 1977)
 ; orginal-population (a switch to turn on or off the use of the original population figures used by Wright and Zeder 1977. If true, the populations for each village for each year are read from WZpop.csv)
 ; regulation (a switch that turns on or off the original production regulation method described by Wright and Zeder 1977 (this is not yet implemented)
@@ -44,9 +44,11 @@ population
 axe-need
 salt-need
 feathers-exported
+previous-feathers-exported
 salt-exported
 axes-exported
 shells-exported
+previous-shells-exported
 ]
 
 ;=================================================================================================================================================
@@ -70,10 +72,14 @@ end
 ;=================================================================================================================================================
 to go
 set year ticks + 1
-if original-population = true
+ifelse original-population = true
     [
       read-population
     ]
+    [
+      find-population
+    ]
+
 produce
 exchange
 
@@ -133,22 +139,33 @@ ifelse year = 1
   [
     if regulation = true
       [
-        ifelse [feathers-exported] of village 1 <= 0
+        ifelse [salt-exported] of village 1 > 0
           [
-          ;  set assess-axe (
-
-
+            ;set assessment value for axe producers
+            set assess-axe (1 + (([feathers-exported] of village 1 - [previous-feathers-exported] of village 1) / shell))
           ]
-
+        ;start else
           [
+            ;alternative assessment value for axe producers if no salt is received
+            set assess-axe ([feathers-exported] of village 1 / [previous-feathers-exported] of village 1)
           ]
-
-
-
+        ifelse [axes-exported] of village 6 > 0
+          [
+            ;set assessment value for salt producers
+            set assess-salt (1 + (([shells-exported] of village 6 - [previous-shells-exported] of village 6) / feathers))
+          ]
+        ;start else
+          [
+            ;alternative assessment value for axe producers if no salt is received
+            set assess-salt ([shells-exported] of village 6 / [previous-shells-exported] of village 6)
+          ]
+         ;adjust proportion of the population involved in production by multiplying by the assessment value
+        set salt-proportion (salt-proportion * assess-salt)
+        set axe-proportion (axe-proportion * assess-axe)
       ]
 
-
   ]
+
 set feathers (feathers-per-producer * proportion-feather-producers * (matrix:get yearpop (year - 1) 7))
 set shell (shell-per-producer * proportion-shell-producers * (matrix:get yearpop (year - 1) 0))
 set salt (salt-per-producer * salt-proportion * (matrix:get yearpop (year - 1) 7))
@@ -159,6 +176,11 @@ end
 ;==========================================================================================================================================================
 to exchange
 
+ask villages
+  [
+    set previous-shells-exported shells-exported
+    set previous-feathers-exported feathers-exported
+  ]
 
 let i 1
 while [i <= nvillages]
@@ -195,7 +217,7 @@ while [i <= nvillages - 1]
   ]
 
 set i 6
-while [i > 0]
+while [i >= 0]
   [
     ask village i
       [
@@ -218,6 +240,12 @@ while [i <= nvillages]
        ]
      set i (i + 1)
    ]
+
+end
+
+;===============================================================================================================================================================
+to find-population
+
 
 end
 @#$#@#$#@
@@ -317,7 +345,7 @@ proportion-shell-producers
 proportion-shell-producers
 0
 1
-0.16
+0.15
 .01
 1
 NIL
@@ -463,14 +491,14 @@ HORIZONTAL
 SLIDER
 830
 205
-1022
+1032
 238
 proportion-salt-producers
 proportion-salt-producers
 0
 1
-0.09
-.01
+0.097
+.001
 1
 NIL
 HORIZONTAL
@@ -484,8 +512,8 @@ proportion-axe-producers
 proportion-axe-producers
 0
 1
-0.1
-.01
+0.091
+.001
 1
 NIL
 HORIZONTAL
@@ -847,6 +875,86 @@ NetLogo 6.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>salt</metric>
+    <metric>axes</metric>
+    <metric>feathers</metric>
+    <metric>shell</metric>
+    <metric>assess-axe</metric>
+    <metric>assess-salt</metric>
+    <metric>axe-proportion</metric>
+    <metric>salt-proportion</metric>
+    <metric>[population] of village 0</metric>
+    <metric>[population] of village 1</metric>
+    <metric>[population] of village 2</metric>
+    <metric>[population] of village 3</metric>
+    <metric>[population] of village 4</metric>
+    <metric>[population] of village 5</metric>
+    <metric>[population] of village 6</metric>
+    <metric>[population] of village 7</metric>
+    <metric>[salt-exported] of village 0</metric>
+    <metric>[salt-exported] of village 1</metric>
+    <metric>[salt-exported] of village 2</metric>
+    <metric>[salt-exported] of village 3</metric>
+    <metric>[salt-exported] of village 4</metric>
+    <metric>[salt-exported] of village 5</metric>
+    <metric>[salt-exported] of village 6</metric>
+    <metric>[salt-exported] of village 7</metric>
+    <metric>[axes-exported] of village 0</metric>
+    <metric>[axes-exported] of village 1</metric>
+    <metric>[axes-exported] of village 2</metric>
+    <metric>[axes-exported] of village 3</metric>
+    <metric>[axes-exported] of village 4</metric>
+    <metric>[axes-exported] of village 5</metric>
+    <metric>[axes-exported] of village 6</metric>
+    <metric>[axes-exported] of village 7</metric>
+    <enumeratedValueSet variable="salt-per-producer">
+      <value value="150"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="axes-per-producer">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proportion-feather-producers">
+      <value value="0.17"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proportion-axe-producers">
+      <value value="0.091"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-years">
+      <value value="60"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="axe-need-per-person">
+      <value value="0.05"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="shell-per-producer">
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proportion-shell-producers">
+      <value value="0.15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="feathers-per-producer">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="original-population">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="regulation">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="salt-need-per-person">
+      <value value="1.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="pass-through-rate">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proportion-salt-producers">
+      <value value="0.097"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
