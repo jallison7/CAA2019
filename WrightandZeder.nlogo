@@ -49,6 +49,8 @@ salt-exported
 axes-exported
 shells-exported
 previous-shells-exported
+war-year
+epidemic-year
 ]
 
 ;=================================================================================================================================================
@@ -68,6 +70,9 @@ to setup
       set max-years 60
     ]
 
+; random seeds with interesting results 10005 (mixed results, increasing axe production has an effect on salt); 10009 (no failures with salt, few with axes); 10014 (in 100 years, no failures with salt, many with axes, but if it runs longer, axes do better);
+  ; 10016, a few early failures with axes, otherwise everything is good; 10050 (increasing axe production from 5 to 6 increases the salt failures)
+random-seed seed
 end
 ;=================================================================================================================================================
 to go
@@ -147,7 +152,10 @@ ifelse year = 1
         ;start else
           [
             ;alternative assessment value for axe producers if no salt is received
-            set assess-axe ([feathers-exported] of village 1 / [previous-feathers-exported] of village 1)
+            if [previous-feathers-exported] of village 1 > 0
+              [
+                set assess-axe ([feathers-exported] of village 1 / [previous-feathers-exported] of village 1)
+              ]
           ]
         ifelse [axes-exported] of village 6 > 0
           [
@@ -157,7 +165,10 @@ ifelse year = 1
         ;start else
           [
             ;alternative assessment value for axe producers if no salt is received
-            set assess-salt ([shells-exported] of village 6 / [previous-shells-exported] of village 6)
+            if [previous-shells-exported] of village 6 > 0
+              [
+                set assess-salt ([shells-exported] of village 6 / [previous-shells-exported] of village 6)
+              ]
           ]
          ;adjust proportion of the population involved in production by multiplying by the assessment value
         set salt-proportion (salt-proportion * assess-salt)
@@ -166,10 +177,13 @@ ifelse year = 1
 
   ]
 
-set feathers (feathers-per-producer * proportion-feather-producers * (matrix:get yearpop (year - 1) 7))
-set shell (shell-per-producer * proportion-shell-producers * (matrix:get yearpop (year - 1) 0))
-set salt (salt-per-producer * salt-proportion * (matrix:get yearpop (year - 1) 7))
-set axes (axes-per-producer * axe-proportion) * (matrix:get yearpop (year - 1) 0)
+
+
+set feathers (feathers-per-producer * proportion-feather-producers * ([population] of village 7))
+set shell (shell-per-producer * proportion-shell-producers * ([population] of village 0))
+set salt (salt-per-producer * salt-proportion * ([population] of village 7))
+set axes (axes-per-producer * axe-proportion * ([population] of village 0))
+
 
 end
 
@@ -287,65 +301,67 @@ ifelse year = 1  ; set initial populations to equal the first year populations u
      [
        set population 180
      ]
+
+  ;find years in which villages are impacted by epidemics and wars
+   while [i < 8]
+     [
+       ask village i
+        [
+         set epidemic-year ((random 9) + 5)
+         set war-year ((random 42) + 14)
+        ]
+       set i (i + 1)
+     ]
   ]
 ;start else
-  [ ; finds population in a normal year; need to build in wars and epidemics
-    if i < 8
+; finds population in a normal year; need to build in wars and epidemics
+  [
+    set i 0
+    while [i < 8]
       [
-        let births (random 11) + 2 ; after the addition, this returns a random integer between 2 and 12
-        let deaths (random 11)
+        set births (random 11) + 2 ; after the addition, this returns a random integer between 2 and 12
+        set deaths (random 11)
         ask village i
         [
           set population (population + births - deaths)
         ]
+        if year = [epidemic-year] of village i
+          [
+            ask village i
+              [
+                set population (population - ((random 3) + 10))
+                set epidemic-year (epidemic-year + ((random 9) + 5))
+              ]
+          ]
+        if year = [war-year] of village i
+          [
+            ask village i
+              [
+                set population (population - ((random 21) + 15))
+                set war-year (war-year + ((random 42) + 14))
+              ]
+          ]
+        if [population] of village i < 0
+          [
+            ask village i
+              [
+                set population 0
+              ]
+          ]
+
         set i (i + 1)
       ]
 
+
   ]
-;PASCAL code
-;procedure findpop;
 
-;var
-;j,births,deaths : longint;
-;epidemicYear, warYear : array[1..villages] of longint;
-
-
-;      for j := 1 to villages do
-;        begin
-;          epidemicYear[j] := randint(5,13);
-;          warYear[j] := randint(14,55);
-;        end;
-;    end;
-;
-;  if i > 1 then
-;    begin
-;      for j := 1 to villages do
-;        begin
-;          births := randint(2,12);
-;          deaths := randint(0,10);
-;          pop[i,j] := pop[i-1,j] + births - deaths;
-;          if epidemicYear[j] = i then
-;            begin
-;              pop[i,j] := pop[i,j] - randint(10,12);
-;              epidemicYear[j] := epidemicYear[j] + randint(5,13);
-;            end;
-;          if warYear[j] = i then
-;            begin
-;              pop[i,j] := pop[i,j] - randint(15,35);
-;              warYear[j] := warYear[j] + randint(14,55);
-;            end;
-;        end;
-;
-;    end;
-;end;
-;
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 195
 30
 803
-437
+239
 -1
 -1
 2.0
@@ -361,7 +377,7 @@ GRAPHICS-WINDOW
 0
 299
 0
-198
+99
 0
 0
 1
@@ -393,7 +409,7 @@ salt-per-producer
 0
 300
 150.0
-1
+5
 1
 NIL
 HORIZONTAL
@@ -405,7 +421,7 @@ SLIDER
 153
 feathers-per-producer
 feathers-per-producer
-0
+1
 20
 10.0
 1
@@ -420,7 +436,7 @@ SLIDER
 198
 shell-per-producer
 shell-per-producer
-0
+1
 40
 20.0
 1
@@ -561,7 +577,7 @@ SWITCH
 266
 original-population
 original-population
-0
+1
 1
 -1000
 
@@ -573,8 +589,8 @@ SLIDER
 max-years
 max-years
 0
-1000
-60.0
+500
+250.0
 1
 1
 NIL
@@ -620,6 +636,53 @@ regulation
 0
 1
 -1000
+
+PLOT
+195
+245
+490
+395
+Village 1 Salt Received - Salt-Needed 
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" "if year >= 1 \n[\n  plot [salt-exported] of village 0\n]"
+
+PLOT
+490
+245
+800
+395
+Village 8 Axes Received - Axes Needed
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" "if year >= 1 \n[\n  plot [axes-exported] of village 7\n]"
+
+INPUTBOX
+20
+355
+172
+415
+seed
+100050.0
+1
+0
+Number
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -971,12 +1034,15 @@ NetLogo 6.0
   <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
+    <metric>year</metric>
     <metric>salt</metric>
     <metric>axes</metric>
     <metric>feathers</metric>
     <metric>shell</metric>
     <metric>assess-axe</metric>
     <metric>assess-salt</metric>
+    <metric>proportion-axe-producers</metric>
+    <metric>proportion-salt-producers</metric>
     <metric>axe-proportion</metric>
     <metric>salt-proportion</metric>
     <metric>[population] of village 0</metric>
@@ -1003,48 +1069,22 @@ NetLogo 6.0
     <metric>[axes-exported] of village 5</metric>
     <metric>[axes-exported] of village 6</metric>
     <metric>[axes-exported] of village 7</metric>
-    <enumeratedValueSet variable="salt-per-producer">
-      <value value="150"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="axes-per-producer">
-      <value value="5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="proportion-feather-producers">
-      <value value="0.17"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="proportion-axe-producers">
-      <value value="0.091"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="max-years">
-      <value value="60"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="axe-need-per-person">
-      <value value="0.05"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="shell-per-producer">
-      <value value="20"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="proportion-shell-producers">
-      <value value="0.15"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="feathers-per-producer">
-      <value value="10"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="original-population">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="regulation">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="salt-need-per-person">
-      <value value="1.6"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="pass-through-rate">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="proportion-salt-producers">
-      <value value="0.097"/>
-    </enumeratedValueSet>
+    <metric>[war-year] of village 0</metric>
+    <metric>[war-year] of village 1</metric>
+    <metric>[war-year] of village 2</metric>
+    <metric>[war-year] of village 3</metric>
+    <metric>[war-year] of village 4</metric>
+    <metric>[war-year] of village 5</metric>
+    <metric>[war-year] of village 6</metric>
+    <metric>[war-year] of village 7</metric>
+    <metric>[epidemic-year] of village 0</metric>
+    <metric>[epidemic-year] of village 1</metric>
+    <metric>[epidemic-year] of village 2</metric>
+    <metric>[epidemic-year] of village 3</metric>
+    <metric>[epidemic-year] of village 4</metric>
+    <metric>[epidemic-year] of village 5</metric>
+    <metric>[epidemic-year] of village 6</metric>
+    <metric>[epidemic-year] of village 7</metric>
   </experiment>
 </experiments>
 @#$#@#$#@
