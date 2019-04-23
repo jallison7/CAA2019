@@ -32,10 +32,11 @@ globals
  axes
  assess-axe ; number by which production is increased or decreased in response to shortfalls
  assess-salt
+ linkable
 ]
 
 breed [villages village]
-
+breed [persons person]
 
 villages-own
 [
@@ -51,6 +52,11 @@ shells-exported
 previous-shells-exported
 war-year
 epidemic-year
+]
+
+persons-own
+[
+  village-number
 ]
 
 ;=================================================================================================================================================
@@ -69,7 +75,7 @@ to setup
       set yearpop  matrix:from-row-list pop
       set max-years 60
     ]
-
+  populate-villages
 ; random seeds with interesting results: 10005 (mixed results, increasing axe production has an effect on salt); 10009 (no failures with salt, few with axes); 10014 (in 100 years, no failures with salt, many with axes, but if it runs longer, axes do better);
   ; 10016, a few early failures with axes, otherwise everything is good; 10050 (increasing axe production from 5 to 6 increases the salt failures)
 random-seed seed
@@ -118,8 +124,6 @@ to locate-villages ; this runs from the setup procedure. It creates seeds for "v
      ]
 
 
-
-
     ask patches with [pcolor = red]
     [
     ask patches in-radius 8 ; this draws circles representing villages around the village seeds created by the locate-villages procedure, and numbers the villages. This is purely for visualization purposes and affects nothing but the display.
@@ -127,6 +131,75 @@ to locate-villages ; this runs from the setup procedure. It creates seeds for "v
        set pcolor red
      ]
     ]
+
+end
+;========================================================================================================================================================
+to populate-villages
+
+ ask village 0
+     [
+       set population 178
+     ]
+   ask village 1
+     [
+       set population 199
+     ]
+   ask village 2
+     [
+       set population 200
+     ]
+  ask village 3
+     [
+       set population 181
+     ]
+  ask village 4
+     [
+       set population 215
+     ]
+  ask village 5
+     [
+       set population 230
+     ]
+  ask village 6
+     [
+       set population 210
+     ]
+   ask village 7
+     [
+       set population 180
+     ]
+
+ let i 0
+
+ while [i < 8]
+   [
+     ask village i
+       [
+         hatch-persons population
+           [
+             set color blue
+             set size 1
+             set label ""
+             lt random 360
+             forward 5
+           ]
+       ]
+     set i (i + 1)
+   ]
+
+ set i 1
+
+ while [i < 8]
+   [
+     ask persons with [village-number = i]
+       [
+      repeat links-per-person
+         [
+          create-link-with one-of persons with [village-number = (i + 1)]
+         ]
+       ]
+    set i (i + 1)
+   ]
 
 end
 
@@ -269,38 +342,6 @@ let i 0
 
 ifelse year = 1  ; set initial populations to equal the first year populations used by Wright and Zeder
   [
-   ask village 0
-     [
-       set population 178
-     ]
-   ask village 1
-     [
-       set population 199
-     ]
-   ask village 2
-     [
-       set population 200
-     ]
-  ask village 3
-     [
-       set population 181
-     ]
-  ask village 4
-     [
-       set population 215
-     ]
-  ask village 5
-     [
-       set population 230
-     ]
-  ask village 6
-     [
-       set population 210
-     ]
-   ask village 7
-     [
-       set population 180
-     ]
 
   ;find years in which villages are impacted by epidemics and wars
    while [i < 8]
@@ -683,6 +724,21 @@ seed
 1
 0
 Number
+
+SLIDER
+840
+290
+1012
+323
+links-per-person
+links-per-person
+0
+25
+5.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
