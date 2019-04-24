@@ -136,7 +136,7 @@ to produce
 ifelse year = 1
   [
     set salt-proportion proportion-salt-producers
-    set axe-proportion proportion-axe-producers  ;need to build in the regulation mechanism that varies salt-proportion and axe-proportion in subsequent years
+    set axe-proportion proportion-axe-producers
     set assess-axe 1
     set assess-salt 1
   ]
@@ -577,7 +577,7 @@ SWITCH
 266
 original-population
 original-population
-1
+0
 1
 -1000
 
@@ -590,7 +590,7 @@ max-years
 max-years
 0
 500
-250.0
+60.0
 1
 1
 NIL
@@ -674,10 +674,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "if year >= 1 \n[\n  plot [axes-exported] of village 7\n]"
 
 INPUTBOX
-20
-355
-172
-415
+1155
+370
+1220
+430
 seed
 100050.0
 1
@@ -1035,6 +1035,7 @@ NetLogo 6.0
     <setup>setup</setup>
     <go>go</go>
     <metric>year</metric>
+    <metric>seed</metric>
     <metric>salt</metric>
     <metric>axes</metric>
     <metric>feathers</metric>
@@ -1085,6 +1086,10 @@ NetLogo 6.0
     <metric>[epidemic-year] of village 5</metric>
     <metric>[epidemic-year] of village 6</metric>
     <metric>[epidemic-year] of village 7</metric>
+    <enumeratedValueSet variable="regulation">
+      <value value="true"/>
+      <value value="false"/>
+    </enumeratedValueSet>
   </experiment>
 </experiments>
 @#$#@#$#@
